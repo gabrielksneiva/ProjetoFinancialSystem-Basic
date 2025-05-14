@@ -3,10 +3,6 @@ from api.types import User
 
 router = APIRouter()
 
-@router.get("/healthcheck")
-async def healthcheck():
-    return {"message": "OK"}
-
 # Users
 @router.post("/users", tags=["users"])
 async def create_user(user_data: User) -> dict:

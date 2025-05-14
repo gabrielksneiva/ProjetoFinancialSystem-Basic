@@ -4,6 +4,10 @@ from api.routes import router
 
 app = FastAPI()
 
+@app.get("/healthcheck")
+async def healthcheck():
+    return {"message": "OK"}
+
 app.include_router(router, prefix="/api")
 
 if __name__ == "__main__":
