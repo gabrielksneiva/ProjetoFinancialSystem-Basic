@@ -1,0 +1,9 @@
+Main: Onde o programa roda
+
+Routes: Rotas divididas ou não em grupos
+
+Types (um pra cada pasta): Criação de "moldes" (campos necessários ou não)
+
+Handlers: "primeiros-socorros", checagens iniciais, validações de campos etc
+
+Services: Regras de negócio, chamadas de banco, cálculos etc
