@@ -1,6 +1,13 @@
 from fastapi import FastAPI
+import os
 import uvicorn
+import asyncio
 from api.routes import router
+from repositories.connection import connect_to_postgres
+import logging
+from api.handler import test_connection_db
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI()
 
