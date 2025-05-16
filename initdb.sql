@@ -1,14 +1,16 @@
--- Criação do banco de dados
-CREATE DATABASE IF NOT EXISTS financial_system;
-USE financial_system;
+-- initdb.sql
 
--- Tabela de usuários
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+-- 1. Cria extensão para gerar UUIDs (se quiser usar UUIDs em vez de serial)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. Tabela de usuários
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    uuid UUID NOT NULL DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    is_active BOOLEAN DEFAULT TRUE
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    is_active BOOLEAN DEFAULT TRUE,
 );

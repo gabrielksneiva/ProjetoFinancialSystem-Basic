@@ -39,7 +39,24 @@ class UserService():
             raise HTTPException(status_code=500, detail="Failed to create user")
     
         return {"message": "User created successfully", "userid": inserted_user["id"]}
+    
+    async def get_users(self, user_id: int) -> dict:
+        retrieved_user = await self.database.get_user_by_any_field("id", user_id)
 
+        if not retrieved_user:
+            logger.error("User not found")
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user = {
+            "id": retrieved_user["id"],
+            "username": retrieved_user["username"],
+            "email": retrieved_user["email"],
+            "created_at": retrieved_user["created_at"],
+            "updated_at": retrieved_user["updated_at"],
+            "is_active": retrieved_user["is_active"]
+        }
+
+        return user
 
     async def _hash_password(self, password: str) -> str:
         # Hash the password using bcrypt

@@ -35,14 +35,8 @@ class Database:
             user_data.updated_at,
             user_data.is_active
         )
-
-    async def get_user(self, user_id):
-        query = "SELECT id, username, email FROM users WHERE id = $1"
-        return await self.connection.fetchrow(query, user_id)
     
     async def get_user_by_any_field(self, field, value):
-        if field not in ["username", "email"]:
-            raise ValueError("Invalid field for user lookup")
         query = f"SELECT id, username, email FROM users WHERE {field} = $1"
         return await self.connection.fetchrow(query, value)
     

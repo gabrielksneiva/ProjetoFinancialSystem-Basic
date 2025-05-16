@@ -19,6 +19,19 @@ class Handler:
 
         
         return user_created
+    
+    async def get_users(self, user_id: int) -> dict:
+        if user_id is None:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
+        if not isinstance(user_id, int):
+            raise HTTPException(status_code=400, detail="User ID must be an integer")
+        
+        if user_id <= 0:    
+            raise HTTPException(status_code=400, detail="User ID must be greater than 0")
+
+        users = await self.user_service.get_users(user_id=user_id)
+        return users
 
 
 

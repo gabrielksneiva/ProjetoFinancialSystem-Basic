@@ -42,17 +42,13 @@ async def create_user(body: UserCreate) -> dict:
 
     return user_created
 
-# @router.get("/users/{user_id}", tags=["users"])
-# async def get_user(user_id: int) -> dict:
-#     return {"user_id": user_id, "name": "John Doe"}
+@router.get("/users/{user_id}", tags=["users"])
+async def get_users(user_id: int) -> dict:
+    # CaL Handler
+    users = await handler.get_users(user_id)
+    return users
 
-# @router.put("/users/{user_id}", tags=["users"])
-# async def update_user(user_id: int) -> dict:
-#     return {"user_id": user_id, "message": "User updated"}
 
-# @router.delete("/users/{user_id}", tags=["users"])
-# async def delete_user(user_id: int) -> dict:
-#     return {"user_id": user_id, "message": "User deleted"}
 
 
 # Deposit
