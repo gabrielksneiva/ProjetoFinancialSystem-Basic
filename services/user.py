@@ -4,6 +4,9 @@ from api.types import UserCreate
 from repositories.database import Database
 from shared.types import User
 from time import time
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class UserService():
     def __init__(self, database: Database):
@@ -13,10 +16,12 @@ class UserService():
         # Validate user existence
         fetched_user_by_email = await self.database.get_user_by_any_field("email", user_data.email)
         if fetched_user_by_email:
+            logger.error("User already exists with this email")
             raise HTTPException(status_code=409, detail="User already exists with this email")
         
         fetched_user_by_username = await self.database.get_user_by_any_field("username", user_data.username)
         if fetched_user_by_username:
+            logger.error("User already exists with this username")
             raise HTTPException(status_code=409, detail="User already exists with this username")
         
         # Encrypt the password
@@ -30,7 +35,8 @@ class UserService():
 
         # Check if the user was inserted successfully
         if not inserted_user:
-            raise ValueError("Failed to create user")
+            logger.error("Failed to create user in the database")
+            raise HTTPException(status_code=500, detail="Failed to create user")
     
         return {"message": "User created successfully", "userid": inserted_user["id"]}
 

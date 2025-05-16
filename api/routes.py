@@ -27,7 +27,7 @@ async def startup_event():
     await database_instance.initialize_database()
     user_service = UserService(database_instance)
     handler = Handler(user_service)
-    return await test_connection_db(admin, password, database, host, port)
+    await test_connection_db(admin, password, database, host, port)
 
 @router.on_event("shutdown")
 async def shutdown_event():
@@ -56,13 +56,23 @@ async def create_user(body: UserCreate) -> dict:
 
 
 # Deposit
-
-
-
+@router.post("/deposit", tags=["transactions"])
+async def deposit() -> dict:
+    raise NotImplemented
 
 # Withdraw
+@router.post("/withdraw", tags=["transactions"])
+async def withdraw() -> dict:
+    raise NotImplemented
 
+# Balance
+@router.get("/Balance", tags=["transactions"])
+async def balance() -> dict:
+    raise NotImplemented
 
+# Transaction-history
+@router.get("/transaction-history", tags=["transactions"])
+async def transaction_history() -> dict:
+    raise NotImplemented
 
-
-# Statement (Transaction History and Balance)
+# ...

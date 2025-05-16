@@ -15,16 +15,8 @@ class Handler:
         # Validate the request body
         await create_user_request_validation(body)
 
-        # try-catch to handle exceptions and return appropriate HTTP responses + errors
-        try:
-            # Create the user
-            user_created = await self.user_service.create_user(user_data=body)
-        except HTTPException as e:
-            logger.error(f"Error creating user: {e.detail}")
-            raise HTTPException(status_code=e.status_code, detail=e.detail)
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+        user_created = await self.user_service.create_user(user_data=body)
+
         
         return user_created
 
@@ -49,5 +41,5 @@ async def test_connection_db(admin: str, password: str, database: str, host: str
     if connection_status:
         logger.info("Connection to the database was successful")
     else:
-        logger.error("Connection to the database failed")
+        logger.critical("Connection to the database failed")
         raise Exception("Database connection failed")
