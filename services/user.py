@@ -2,7 +2,7 @@ import bcrypt
 from fastapi import HTTPException
 from api.types import UserCreate
 from repositories.database import Database
-from services.types import User
+from shared.types import User
 from time import time
 
 class UserService():
@@ -13,11 +13,11 @@ class UserService():
         # Validate user existence
         fetched_user_by_email = await self.database.get_user_by_any_field("email", user_data.email)
         if fetched_user_by_email:
-            raise HTTPException(status_code=400, detail="User already exists with this email")
+            raise HTTPException(status_code=409, detail="User already exists with this email")
         
         fetched_user_by_username = await self.database.get_user_by_any_field("username", user_data.username)
         if fetched_user_by_username:
-            raise HTTPException(status_code=400, detail="User already exists with this username")
+            raise HTTPException(status_code=409, detail="User already exists with this username")
         
         # Encrypt the password
         user_data.password = await self._hash_password(user_data.password)

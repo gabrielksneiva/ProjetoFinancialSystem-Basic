@@ -1,6 +1,6 @@
 import asyncpg
 import bcrypt
-from services.types import User
+from shared.types import User
 
 class Database:
     def __init__(self, connection):

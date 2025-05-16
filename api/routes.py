@@ -16,7 +16,6 @@ handler = None
 
 @router.on_event("startup")
 async def startup_event():
-    # Variáveis de ambiente
     admin = os.getenv("DB_ADMIN")
     password = os.getenv("DB_PASSWORD")
     database = os.getenv("DB_NAME")
@@ -36,7 +35,7 @@ async def shutdown_event():
         await connection.close()
 
 # Users
-@router.post("/users", tags=["users"])
+@router.post("/users", tags=["users"], status_code=201)
 async def create_user(body: UserCreate) -> dict:
     # Call Handler
     user_created = await handler.create_user(body)
@@ -67,4 +66,3 @@ async def create_user(body: UserCreate) -> dict:
 
 
 # Statement (Transaction History and Balance)
-
