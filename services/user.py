@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from api.types import UserCreate
 from repositories.database import Database
 from shared.types import User
+from shared.hash import hash_any_string
 from time import time
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +26,7 @@ class UserService():
             raise HTTPException(status_code=409, detail="User already exists with this username")
         
         # Encrypt the password
-        user_data.password = await self._hash_password(user_data.password)
+        user_data.password = await hash_any_string(user_data.password)
 
         # Parse to User object
         user_to_insert = User(**user_data.dict())
@@ -57,8 +58,3 @@ class UserService():
         }
 
         return user
-
-    async def _hash_password(self, password: str) -> str:
-        # Hash the password using bcrypt
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        return hashed_password.decode('utf-8')
