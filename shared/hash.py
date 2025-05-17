@@ -1,6 +1,11 @@
-import bcrypt
+import os
+import hmac
+import hashlib
+from dotenv import load_dotenv
 
-def hash_any_string(self, any_string: str) -> str:
-        # Hash any string using bcrypt
-        hashed_any_string = bcrypt.hashpw(any_string.encode('utf-8'), bcrypt.gensalt())
-        return hashed_any_string.decode('utf-8')
+load_dotenv()
+
+def hash_any_string(any_string: str) -> str:
+    private_key = os.getenv("PRIVATE_KEY")
+    h = hmac.new(private_key.encode('utf-8'), any_string.encode('utf-8'), hashlib.sha256)
+    return h.hexdigest()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api.types import UserCreate
+from api.types import UserCreate, UserUpdate
 from services.user import UserService
 from repositories.database import Database
 from repositories.connection import connect_to_postgres
@@ -48,8 +48,11 @@ async def get_users(user_id: int) -> dict:
     users = await handler.get_users(user_id)
     return users
 
-
-
+@router.put("users/{user_id}", tags=["users"])
+async def update_user(user_id: int, body: UserUpdate) -> dict:
+    # Call Handler
+    user_updated = await handler.update_user(user_id, body)
+    return user_updated
 
 # Deposit
 @router.post("/deposit", tags=["transactions"])

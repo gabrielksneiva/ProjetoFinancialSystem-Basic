@@ -1,10 +1,11 @@
 import bcrypt
 from fastapi import HTTPException
-from api.types import UserCreate
+from api.types import UserCreate, UserUpdate
 from repositories.database import Database
 from shared.types import User
 from shared.hash import hash_any_string
 from time import time
+from datetime import datetime
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,3 +59,49 @@ class UserService():
         }
 
         return user
+    
+    async def update_user(self, user_id: int, user_data: UserUpdate) -> dict:
+        fetched_user = await self.database.get_user_by_any_field("id", user_id)
+        logger.info(f"Fetched user: {fetched_user}")
+        if not fetched_user:
+            logger.error("User not found")
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user_data.email:
+            fetched_user_by_email = await self.database.get_user_by_any_field("email", user_data.email)
+            if fetched_user_by_email and fetched_user_by_email["id"] == user_id and fetched_user_by_email["email"] == user_data.email:
+                logger.error("Email not different")
+                raise HTTPException(status_code=409, detail="Email not different")
+        
+        if user_data.username:
+            fetched_user_by_username = await self.database.get_user_by_any_field("username", user_data.username)
+            if fetched_user_by_username and fetched_user_by_username["id"] == user_id and fetched_user_by_username["username"] == user_data.username:
+                logger.error("Username not different")
+                raise HTTPException(status_code=409, detail="Username not different")
+        
+        if user_data.password:
+            user_data.password = hash_any_string(user_data.password)
+            fetched_user_by_password = await self.database.get_user_by_any_field("password", user_data.password)
+            if fetched_user_by_password and fetched_user_by_password["id"] == user_id and fetched_user_by_password["password"] == user_data.password:
+                logger.error("Password not different")
+                raise HTTPException(status_code=409, detail="Password not different")
+            
+        if user_data.is_active is not None:
+            fetched_user_by_is_active = await self.database.get_user_by_any_field("is_active", user_data.is_active)
+            if fetched_user_by_is_active and fetched_user_by_is_active["id"] == user_id and fetched_user_by_is_active["is_active"] == user_data.is_active:
+                logger.error("is_active not different")
+                raise HTTPException(status_code=409, detail="is_active not different")
+            
+        user_to_update = User( 
+                              updated_at=datetime.utcnow(), 
+                              created_at=fetched_user["created_at"], 
+                              id=user_id, 
+                              username=user_data.username if user_data.username else fetched_user["username"], 
+                              email=user_data.email if user_data.email else fetched_user["email"], 
+                              password=user_data.password if user_data.password else fetched_user["password"], 
+                              is_active=user_data.is_active if user_data.is_active is not None else fetched_user["is_active"]
+                            )
+
+        updated_user = await self.database.update_user(user_id, user_to_update)
+
+        return {"message": "User updated successfully"}

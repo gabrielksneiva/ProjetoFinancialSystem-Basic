@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from api.types import create_user_request_validation
+from api.types import create_user_request_validation, UserUpdate, update_user_request_validation
 from shared.types import UserCreate
 from services.user import UserService
 from repositories.connection import connect_to_postgres
@@ -17,7 +17,6 @@ class Handler:
 
         user_created = await self.user_service.create_user(user_data=body)
 
-        
         return user_created
     
     async def get_users(self, user_id: int) -> dict:
@@ -33,6 +32,12 @@ class Handler:
         users = await self.user_service.get_users(user_id=user_id)
         return users
 
+    async def update_user(self, user_id: int, body: UserUpdate) -> dict:
+        await update_user_request_validation(body, user_id)
+
+        user_updated = await self.user_service.update_user(user_id=user_id, user_data=body)
+
+        return user_updated
 
 
 
