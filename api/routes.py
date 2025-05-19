@@ -54,6 +54,12 @@ async def update_user(user_id: int, body: UserUpdate) -> dict:
     user_updated = await handler.update_user(user_id, body)
     return user_updated
 
+@router.delete("/users/{user_id}", tags=["users"])
+async def delete_user(user_id: int) -> dict:
+    # Call Handler
+    user_deleted = await handler.delete_user(user_id)
+    return user_deleted
+
 # Deposit
 @router.post("/deposit", tags=["transactions"])
 async def deposit() -> dict:

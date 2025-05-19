@@ -105,3 +105,13 @@ class UserService():
         updated_user = await self.database.update_user(user_id, user_to_update)
 
         return {"message": "User updated successfully"}
+    
+    async def delete_user(self, user_id: int) -> dict:
+        fetched_user = await self.database.get_user_by_any_field("id", user_id)
+        if not fetched_user:
+            logger.error("User not found")
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        deleted_user = await self.database.delete_user(user_id)
+
+        return {"message": "User deleted successfully"}

@@ -38,6 +38,20 @@ class Handler:
         user_updated = await self.user_service.update_user(user_id=user_id, user_data=body)
 
         return user_updated
+    
+    async def delete_user(self, user_id: int) -> dict:
+        if user_id is None:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
+        if not isinstance(user_id, int):
+            raise HTTPException(status_code=400, detail="User ID must be an integer")
+        
+        if user_id <= 0:    
+            raise HTTPException(status_code=400, detail="User ID must be greater than 0")
+
+        user_deleted = await self.user_service.delete_user(user_id=user_id)
+
+        return user_deleted
 
 
 
