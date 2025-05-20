@@ -5,6 +5,7 @@ from repositories.database import Database
 from services.auth import AuthService
 from shared.types import User
 from shared.hash import hash_any_string
+from services.types import validate_update_fields
 from time import time
 from datetime import datetime
 import logging
@@ -69,30 +70,7 @@ class UserService():
             logger.error("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         
-        if user_data.email:
-            fetched_user_by_email = await self.database.get_user_by_any_field("email", user_data.email)
-            if fetched_user_by_email and fetched_user_by_email["id"] == email and fetched_user_by_email["email"] == user_data.email:
-                logger.error("Email not different")
-                raise HTTPException(status_code=409, detail="Email not different")
-        
-        if user_data.name:
-            fetched_user_by_name = await self.database.get_user_by_any_field("name", user_data.name)
-            if fetched_user_by_name and fetched_user_by_name["id"] == email and fetched_user_by_name["name"] == user_data.name:
-                logger.error("name not different")
-                raise HTTPException(status_code=409, detail="name not different")
-        
-        if user_data.password_hash:
-            user_data.password_hash = hash_any_string(user_data.password_hash)
-            fetched_user_by_password_hash = await self.database.get_user_by_any_field("password_hash", user_data.password_hash)
-            if fetched_user_by_password_hash and fetched_user_by_password_hash["email"] == email and fetched_user_by_password_hash["password_hash"] == user_data.password_hash:
-                logger.error("password_hash not different")
-                raise HTTPException(status_code=409, detail="password_hash not different")
-            
-        if user_data.is_active is not None:
-            fetched_user_by_is_active = await self.database.get_user_by_any_field("is_active", user_data.is_active)
-            if fetched_user_by_is_active and fetched_user_by_is_active["id"] == email and fetched_user_by_is_active["is_active"] == user_data.is_active:
-                logger.error("is_active not different")
-                raise HTTPException(status_code=409, detail="is_active not different")
+        await validate_update_fields(self.database, email, user_data)
             
         user_to_update = User( 
                               updated_at=datetime.utcnow(), 
