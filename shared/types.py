@@ -2,16 +2,20 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 class UserCreate(BaseModel):
-    username: str
+    name: str
     email: str
-    password: str
+    password_hash: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password_hash: str
 
 
 class User(BaseModel):
-    id: int = None
-    username: str
+    id: int = 0
+    name: str
     email: str
-    password: str
+    password_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.utcnow())
     updated_at: datetime = Field(default_factory=lambda: datetime.utcnow())
     is_active: bool = True

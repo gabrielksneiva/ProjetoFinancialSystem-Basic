@@ -1,6 +1,6 @@
-from fastapi import HTTPException
-from api.types import create_user_request_validation, UserUpdate, update_user_request_validation
-from shared.types import UserCreate
+from fastapi import HTTPException, Request
+from api.types import create_user_request_validation, UserUpdate, update_user_request_validation, login_request_validation
+from shared.types import UserCreate, LoginRequest
 from services.user import UserService
 from repositories.connection import connect_to_postgres
 import logging
@@ -19,59 +19,46 @@ class Handler:
 
         return user_created
     
-    async def get_users(self, user_id: int) -> dict:
-        if user_id is None:
+    async def get_users(self, request: Request) -> dict:
+        email = request.state.user.get("email")
+
+        if email is None:
             raise HTTPException(status_code=400, detail="User ID is required")
         
-        if not isinstance(user_id, int):
+        if not isinstance(email, str):
             raise HTTPException(status_code=400, detail="User ID must be an integer")
-        
-        if user_id <= 0:    
-            raise HTTPException(status_code=400, detail="User ID must be greater than 0")
 
-        users = await self.user_service.get_users(user_id=user_id)
+        users = await self.user_service.get_users(email=email)
         return users
 
-    async def update_user(self, user_id: int, body: UserUpdate) -> dict:
-        await update_user_request_validation(body, user_id)
+    async def update_user(self, request: Request, body: UserUpdate) -> dict:
+        email = request.state.user.get("email")
+        await update_user_request_validation(email, body)
 
-        user_updated = await self.user_service.update_user(user_id=user_id, user_data=body)
+        user_updated:dict = await self.user_service.update_user(email=email, user_data=body)
 
         return user_updated
     
-    async def delete_user(self, user_id: int) -> dict:
-        if user_id is None:
+    async def delete_user(self, request: Request) -> dict:
+        email = request.state.user.get("email")
+        
+        if not email:
             raise HTTPException(status_code=400, detail="User ID is required")
         
-        if not isinstance(user_id, int):
+        if not isinstance(email, str):
             raise HTTPException(status_code=400, detail="User ID must be an integer")
-        
-        if user_id <= 0:    
-            raise HTTPException(status_code=400, detail="User ID must be greater than 0")
 
-        user_deleted = await self.user_service.delete_user(user_id=user_id)
+        user_deleted = await self.user_service.delete_user(email=email)
 
         return user_deleted
 
+    async def login_user(self, body: LoginRequest) -> dict:
+        # Validate the request body
+        await login_request_validation(body)
 
+        user_logged_in = await self.user_service.login_user(body.email, body.password_hash)
 
+        if not user_logged_in:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-
-
-
-
-
-
-
-
-
-
-
-# Test conection to the database
-async def test_connection_db(admin: str, password: str, database: str, host: str, port: int):
-    connection_status = await connect_to_postgres(admin=admin, password=password, database=database, host=host, port=port)
-    if connection_status:
-        logger.info("Connection to the database was successful")
-    else:
-        logger.critical("Connection to the database failed")
-        raise Exception("Database connection failed")
+        return user_logged_in

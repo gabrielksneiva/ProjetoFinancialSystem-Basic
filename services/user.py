@@ -2,6 +2,7 @@ import bcrypt
 from fastapi import HTTPException
 from api.types import UserCreate, UserUpdate
 from repositories.database import Database
+from services.auth import AuthService
 from shared.types import User
 from shared.hash import hash_any_string
 from time import time
@@ -11,8 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class UserService():
-    def __init__(self, database: Database):
+    def __init__(self, database: Database, auth_service: AuthService):
         self.database = database
+        self.auth_service = auth_service
 
     async def create_user(self, user_data: UserCreate) -> dict:
         # Validate user existence
@@ -21,13 +23,13 @@ class UserService():
             logger.error("User already exists with this email")
             raise HTTPException(status_code=409, detail="User already exists with this email")
         
-        fetched_user_by_username = await self.database.get_user_by_any_field("username", user_data.username)
-        if fetched_user_by_username:
-            logger.error("User already exists with this username")
-            raise HTTPException(status_code=409, detail="User already exists with this username")
+        fetched_user_by_name = await self.database.get_user_by_any_field("name", user_data.name)
+        if fetched_user_by_name:
+            logger.error("User already exists with this name")
+            raise HTTPException(status_code=409, detail="User already exists with this name")
         
-        # Encrypt the password
-        user_data.password = await hash_any_string(user_data.password)
+        # Encrypt the password_hash
+        user_data.password_hash = hash_any_string(user_data.password_hash)
 
         # Parse to User object
         user_to_insert = User(**user_data.dict())
@@ -40,10 +42,10 @@ class UserService():
             logger.error("Failed to create user in the database")
             raise HTTPException(status_code=500, detail="Failed to create user")
     
-        return {"message": "User created successfully", "userid": inserted_user["id"]}
+        return {"message": "User created successfully", "email": inserted_user["email"]}
     
-    async def get_users(self, user_id: int) -> dict:
-        retrieved_user = await self.database.get_user_by_any_field("id", user_id)
+    async def get_users(self, email: str) -> dict:
+        retrieved_user = await self.database.get_user_by_any_field("email", email)
 
         if not retrieved_user:
             logger.error("User not found")
@@ -51,7 +53,7 @@ class UserService():
         
         user = {
             "id": retrieved_user["id"],
-            "username": retrieved_user["username"],
+            "name": retrieved_user["name"],
             "email": retrieved_user["email"],
             "created_at": retrieved_user["created_at"],
             "updated_at": retrieved_user["updated_at"],
@@ -60,8 +62,8 @@ class UserService():
 
         return user
     
-    async def update_user(self, user_id: int, user_data: UserUpdate) -> dict:
-        fetched_user = await self.database.get_user_by_any_field("id", user_id)
+    async def update_user(self, email: str, user_data: UserUpdate) -> dict:
+        fetched_user = await self.database.get_user_by_any_field("email", email)
         logger.info(f"Fetched user: {fetched_user}")
         if not fetched_user:
             logger.error("User not found")
@@ -69,49 +71,63 @@ class UserService():
         
         if user_data.email:
             fetched_user_by_email = await self.database.get_user_by_any_field("email", user_data.email)
-            if fetched_user_by_email and fetched_user_by_email["id"] == user_id and fetched_user_by_email["email"] == user_data.email:
+            if fetched_user_by_email and fetched_user_by_email["id"] == email and fetched_user_by_email["email"] == user_data.email:
                 logger.error("Email not different")
                 raise HTTPException(status_code=409, detail="Email not different")
         
-        if user_data.username:
-            fetched_user_by_username = await self.database.get_user_by_any_field("username", user_data.username)
-            if fetched_user_by_username and fetched_user_by_username["id"] == user_id and fetched_user_by_username["username"] == user_data.username:
-                logger.error("Username not different")
-                raise HTTPException(status_code=409, detail="Username not different")
+        if user_data.name:
+            fetched_user_by_name = await self.database.get_user_by_any_field("name", user_data.name)
+            if fetched_user_by_name and fetched_user_by_name["id"] == email and fetched_user_by_name["name"] == user_data.name:
+                logger.error("name not different")
+                raise HTTPException(status_code=409, detail="name not different")
         
-        if user_data.password:
-            user_data.password = hash_any_string(user_data.password)
-            fetched_user_by_password = await self.database.get_user_by_any_field("password", user_data.password)
-            if fetched_user_by_password and fetched_user_by_password["id"] == user_id and fetched_user_by_password["password"] == user_data.password:
-                logger.error("Password not different")
-                raise HTTPException(status_code=409, detail="Password not different")
+        if user_data.password_hash:
+            user_data.password_hash = hash_any_string(user_data.password_hash)
+            fetched_user_by_password_hash = await self.database.get_user_by_any_field("password_hash", user_data.password_hash)
+            if fetched_user_by_password_hash and fetched_user_by_password_hash["email"] == email and fetched_user_by_password_hash["password_hash"] == user_data.password_hash:
+                logger.error("password_hash not different")
+                raise HTTPException(status_code=409, detail="password_hash not different")
             
         if user_data.is_active is not None:
             fetched_user_by_is_active = await self.database.get_user_by_any_field("is_active", user_data.is_active)
-            if fetched_user_by_is_active and fetched_user_by_is_active["id"] == user_id and fetched_user_by_is_active["is_active"] == user_data.is_active:
+            if fetched_user_by_is_active and fetched_user_by_is_active["id"] == email and fetched_user_by_is_active["is_active"] == user_data.is_active:
                 logger.error("is_active not different")
                 raise HTTPException(status_code=409, detail="is_active not different")
             
         user_to_update = User( 
                               updated_at=datetime.utcnow(), 
-                              created_at=fetched_user["created_at"], 
-                              id=user_id, 
-                              username=user_data.username if user_data.username else fetched_user["username"], 
+                              created_at=fetched_user["created_at"],  
+                              name=user_data.name if user_data.name else fetched_user["name"], 
                               email=user_data.email if user_data.email else fetched_user["email"], 
-                              password=user_data.password if user_data.password else fetched_user["password"], 
+                              password_hash=user_data.password_hash if user_data.password_hash else fetched_user["password_hash"], 
                               is_active=user_data.is_active if user_data.is_active is not None else fetched_user["is_active"]
                             )
 
-        updated_user = await self.database.update_user(user_id, user_to_update)
+        updated_user = await self.database.update_user(email, user_to_update)
 
         return {"message": "User updated successfully"}
     
-    async def delete_user(self, user_id: int) -> dict:
-        fetched_user = await self.database.get_user_by_any_field("id", user_id)
+    async def delete_user(self, email: str) -> dict:
+        fetched_user = await self.database.get_user_by_any_field("email", email)
         if not fetched_user:
             logger.error("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         
-        deleted_user = await self.database.delete_user(user_id)
+        deleted_user = await self.database.delete_user(email)
 
         return {"message": "User deleted successfully"}
+
+    async def login_user(self, email: str, password_hash: str) -> dict:
+        fetched_user = await self.database.get_user_by_any_field("email", email)
+        if not fetched_user:
+            logger.error("User not found")
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        password_hash_requested_hashed = hash_any_string(password_hash)
+        if fetched_user["password_hash"] != password_hash_requested_hashed:
+            logger.error("Invalid password_hash")
+            raise HTTPException(status_code=401, detail="Invalid password_hash")
+
+        token_to_return = self.auth_service.generate_token(fetched_user.get("email", None))
+        
+        return {"message": "Login successful", "token": token_to_return}
