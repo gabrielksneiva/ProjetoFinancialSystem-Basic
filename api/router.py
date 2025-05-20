@@ -61,14 +61,16 @@ async def get_users(request: Request) -> dict:
 
     return user_returned
 
-@router.put("users/update", tags=["users"], dependencies=[Depends(HTTPBearer())])
+@router.put("/users/update", tags=["users"], dependencies=[Depends(HTTPBearer())])
 async def update_user(request: Request, body: UserUpdate) -> dict:
     user_updated = await handler.update_user(request, body)
+    
     return user_updated
 
 @router.delete("/users/delete", tags=["users"], dependencies=[Depends(HTTPBearer())])
 async def delete_user(request: Request) -> dict:
     user_deleted = await handler.delete_user(request)
+
     return user_deleted
 
 # Login

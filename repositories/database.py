@@ -63,9 +63,6 @@ class Database:
     async def delete_user(self, email: str):
         query = "DELETE FROM users WHERE email = $1 RETURNING email"
         return await self.connection.fetchrow(query, email)
-        if not result:
-            raise HTTPException(status_code=404, detail="User not found")
-        return result
     
     async def close(self):
         await self.connection.close()

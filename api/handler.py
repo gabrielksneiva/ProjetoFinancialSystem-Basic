@@ -53,7 +53,6 @@ class Handler:
         return user_deleted
 
     async def login_user(self, body: LoginRequest) -> dict:
-        # Validate the request body
         await login_request_validation(body)
 
         user_logged_in = await self.user_service.login_user(body.email, body.password_hash)
