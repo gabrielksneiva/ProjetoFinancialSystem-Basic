@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Request
 from api.types import create_user_request_validation, UserUpdate, update_user_request_validation, login_request_validation
 from shared.types import UserCreate, LoginRequest, DepositRequest
+from services.deposit import DepositService
 from services.user import UserService
 from repositories.connection import connect_to_postgres
 import logging
@@ -8,8 +9,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Handler:
-    def __init__(self, user_service: UserService):
+    def __init__(self, user_service: UserService, deposit_service: DepositService):
         self.user_service = user_service
+        self.deposit_service = deposit_service
 
     async def create_user(self, body: UserCreate) -> dict:
         # Validate the request body
@@ -71,6 +73,6 @@ class Handler:
         if body.amount <= 0:
             raise HTTPException(status_code=400, detail="Amount must be greater than zero") 
         
-        deposit_received = await self.user_service.deposit(email, body.amount)
+        deposit_received = await self.deposit_service.deposit(email, body.amount)
 
         return deposit_received

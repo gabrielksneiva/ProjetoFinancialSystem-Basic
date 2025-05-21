@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer
 from api.types import UserCreate, UserUpdate
 from shared.types import LoginRequest, DepositRequest
 from repositories.database import Database
+from services.deposit import DepositService
 from services.user import UserService
 from services.auth import AuthService
 from api.handler import Handler
@@ -32,8 +33,10 @@ async def startup_events():
         expiration_time_in_seconds=int(os.getenv("EXPIRATION_TIME", ""))
     )
     user_service = UserService(database_instance, auth_service)
+    deposit_service = DepositService(database_instance)
+    #withdraw_service = WithdrawService(database_instance)
     
-    handler = Handler(user_service)
+    handler = Handler(user_service, deposit_service)
     
     await test_connection_db(
         os.getenv("DB_ADMIN", ""),
