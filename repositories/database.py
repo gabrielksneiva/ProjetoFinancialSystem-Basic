@@ -11,14 +11,27 @@ class Database:
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            uuid UUID NOT NULL DEFAULT uuid_generate_v4(),
-            name VARCHAR(100) NOT NULL,
             email VARCHAR(255) NOT NULL UNIQUE,
             password_hash_hash VARCHAR(255) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             is_active BOOLEAN DEFAULT TRUE
+        );
+
+        CREATE TABLE IF NOT EXISTS transactions (
+            email VARCHAR(255) NOT NULL,
+            transaction_id UUID DEFAULT uuid_generate_v4(),
+            amount NUMERIC(10, 2) NOT NULL,
+            transaction_type VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS balance (
+            email VARCHAR(255) NOT NULL UNIQUE,
+            balance NUMERIC(10, 2) DEFAULT 0.00,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
         """
         await self.connection.execute(query)
