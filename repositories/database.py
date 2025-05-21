@@ -12,7 +12,7 @@ class Database:
 
         CREATE TABLE IF NOT EXISTS users (
             email VARCHAR(255) NOT NULL UNIQUE,
-            password_hash_hash VARCHAR(255) NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             is_active BOOLEAN DEFAULT TRUE
