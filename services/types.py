@@ -13,12 +13,6 @@ async def validate_update_fields(database: Database, email: str, user_data: User
             logger.error("Email not different")
             raise HTTPException(status_code=409, detail="Email not different")
     
-    if user_data.name:
-        fetched_user_by_name = await database.get_user_by_any_field("name", user_data.name)
-        if fetched_user_by_name and fetched_user_by_name["id"] == email and fetched_user_by_name["name"] == user_data.name:
-            logger.error("name not different")
-            raise HTTPException(status_code=409, detail="name not different")
-    
     if user_data.password_hash:
         user_data.password_hash = hash_any_string(user_data.password_hash)
         fetched_user_by_password_hash = await database.get_user_by_any_field("password_hash", user_data.password_hash)

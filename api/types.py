@@ -6,7 +6,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class UserUpdate(BaseModel):
-    name: str = ""
     email: str = ""
     password_hash: str = ""
     is_active: bool = False
@@ -26,15 +25,12 @@ def validate_password(password_hash: str):
         raise HTTPException(status_code=400, detail="password_hash is required")
 
 async def create_user_request_validation(body: UserCreate):
-    if not body.name:
-        logger.error("Name is required")
-        raise HTTPException(status_code=400, detail="Name is required")
     validate_email(body.email)
     validate_password(body.password_hash)
 
 async def update_user_request_validation(email: str, body: UserUpdate):
     validate_email(email, "Email")
-    if not (body.name or body.email or body.password_hash or body.is_active):
+    if not (body.email or body.password_hash or body.is_active):
         logger.error("At least one field must be provided for update")
         raise HTTPException(status_code=400, detail="At least one field must be provided in update body")
     if body.email:

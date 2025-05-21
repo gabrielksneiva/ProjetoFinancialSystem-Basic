@@ -24,11 +24,6 @@ class UserService():
             logger.error("User already exists with this email")
             raise HTTPException(status_code=409, detail="User already exists with this email")
         
-        fetched_user_by_name = await self.database.get_user_by_any_field("name", user_data.name)
-        if fetched_user_by_name:
-            logger.error("User already exists with this name")
-            raise HTTPException(status_code=409, detail="User already exists with this name")
-        
         # Encrypt the password_hash
         user_data.password_hash = hash_any_string(user_data.password_hash)
 
@@ -53,8 +48,6 @@ class UserService():
             raise HTTPException(status_code=404, detail="User not found")
         
         user = {
-            "id": retrieved_user["id"],
-            "name": retrieved_user["name"],
             "email": retrieved_user["email"],
             "created_at": retrieved_user["created_at"],
             "updated_at": retrieved_user["updated_at"],
@@ -75,7 +68,6 @@ class UserService():
         user_to_update = User( 
                               updated_at=datetime.utcnow(), 
                               created_at=fetched_user["created_at"],  
-                              name=user_data.name if user_data.name else fetched_user["name"], 
                               email=user_data.email if user_data.email else fetched_user["email"], 
                               password_hash=user_data.password_hash if user_data.password_hash else fetched_user["password_hash"], 
                               is_active=user_data.is_active if user_data.is_active is not None else fetched_user["is_active"]

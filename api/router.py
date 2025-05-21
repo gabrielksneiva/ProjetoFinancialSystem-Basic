@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer
 from api.types import UserCreate, UserUpdate
-from shared.types import LoginRequest
+from shared.types import LoginRequest, DepositRequest
 from repositories.database import Database
 from services.user import UserService
 from services.auth import AuthService
@@ -81,9 +81,11 @@ async def login(body: LoginRequest) -> dict:
     return user_logged_in
 
 # Deposit
-@router.post("/deposit", tags=["transactions"])
-async def deposit() -> dict:
-    raise NotImplemented
+@router.post("/deposit", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
+async def deposit(request: Request, body: DepositRequest) -> dict:
+    deposit_received = await handler.deposit(request, body)
+
+    return deposit_received
 
 # Withdraw
 @router.post("/withdraw", tags=["transactions"])

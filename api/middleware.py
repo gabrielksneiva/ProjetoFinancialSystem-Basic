@@ -5,7 +5,7 @@ import os
 
 auth_service = AuthService(
     secret_key=os.getenv("SECRET_KEY", ""),
-    expiration_time_in_seconds=int(os.getenv("EXPIRATION_TIME", ""))
+    expiration_time_in_seconds=int(os.getenv("EXPIRATION_TIME", "900"))
 )
 
 async def is_this_path_protected(request):

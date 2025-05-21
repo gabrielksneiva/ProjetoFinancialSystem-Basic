@@ -1,5 +1,3 @@
-import asyncpg
-import bcrypt
 from shared.types import User
 
 class Database:
@@ -38,13 +36,12 @@ class Database:
 
     async def create_user(self, user_data: User):
         query = """
-        INSERT INTO users (name, email, password_hash, created_at, updated_at, is_active) 
-        VALUES ($1, $2, $3, $4, $5, $6) 
-        RETURNING name, email, created_at, updated_at, is_active
+        INSERT INTO users (email, password_hash, created_at, updated_at, is_active) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING email, created_at, updated_at, is_active
         """
         return await self.connection.fetchrow(
             query,
-            user_data.name,
             user_data.email,
             user_data.password_hash,
             user_data.created_at,
@@ -59,13 +56,12 @@ class Database:
     async def update_user(self, previous_email: str, user_data: User):
         query = """
         UPDATE users 
-        SET name = $1, email = $2, password_hash = $3, updated_at = $4, is_active = $5 
-        WHERE email = $6
-        RETURNING name, email, created_at, updated_at, is_active
+        SET email = $1, password_hash = $2, updated_at = $3, is_active = $4
+        WHERE email = $5
+        RETURNING email, created_at, updated_at, is_active
         """
         return await self.connection.fetchrow(
             query,
-            user_data.name,
             user_data.email,
             user_data.password_hash,
             user_data.updated_at,
@@ -77,5 +73,25 @@ class Database:
         query = "DELETE FROM users WHERE email = $1 RETURNING email"
         return await self.connection.fetchrow(query, email)
     
+    async def create_deposit(self, email: str, amount: float):
+        query = """
+        WITH new_transaction AS (
+            INSERT INTO transactions (email, amount, transaction_type, created_at, updated_at)
+            VALUES ($1, $2, 'deposit', NOW(), NOW())
+            RETURNING transaction_id
+        ),
+        upsert_balance AS (
+            INSERT INTO balance (email, balance, created_at, updated_at)
+            VALUES ($1, $2, NOW(), NOW())
+            ON CONFLICT (email) DO UPDATE
+            SET balance = balance.balance + EXCLUDED.balance,
+            updated_at = NOW()
+            RETURNING balance
+        )
+        SELECT transaction_id FROM new_transaction
+        """
+        return await self.connection.fetchrow(query, email, amount)
+    
     async def close(self):
         await self.connection.close()
+

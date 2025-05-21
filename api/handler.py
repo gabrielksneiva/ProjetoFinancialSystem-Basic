@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Request
 from api.types import create_user_request_validation, UserUpdate, update_user_request_validation, login_request_validation
-from shared.types import UserCreate, LoginRequest
+from shared.types import UserCreate, LoginRequest, DepositRequest
 from services.user import UserService
 from repositories.connection import connect_to_postgres
 import logging
@@ -61,3 +61,16 @@ class Handler:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         return user_logged_in
+    
+    async def deposit(self, request: Request, body: DepositRequest) -> dict:
+        email = request.state.user.get("email")
+
+        if not isinstance(body.amount, float):
+            raise HTTPException(status_code=400, detail="Amount must be a float")
+        
+        if body.amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be greater than zero") 
+        
+        deposit_received = await self.user_service.deposit(email, body.amount)
+
+        return deposit_received
