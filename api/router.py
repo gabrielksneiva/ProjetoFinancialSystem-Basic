@@ -5,6 +5,7 @@ from shared.types import LoginRequest, DepositRequest, WithdrawRequest
 from repositories.database import Database
 from services.deposit import DepositService
 from services.withdraw import WithdrawService
+from services.statement import StatementService
 from services.user import UserService
 from services.auth import AuthService
 from api.handler import Handler
@@ -36,8 +37,9 @@ async def startup_events():
     user_service = UserService(database_instance, auth_service)
     deposit_service = DepositService(database_instance)
     withdraw_service = WithdrawService(database_instance)
+    statement_service = StatementService(database_instance)
     
-    handler = Handler(user_service, deposit_service, withdraw_service)
+    handler = Handler(user_service, deposit_service, withdraw_service, statement_service)
     
     await test_connection_db(
         os.getenv("DB_ADMIN", ""),
@@ -101,11 +103,15 @@ async def withdraw(request: Request, body: WithdrawRequest) -> dict:
 # Balance
 @router.get("/balance", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
 async def balance(request: Request) -> dict:
-    return {}
+    balance_received = await handler.balance(request)
+
+    return balance_received
 
 # Transaction-history
 @router.get("/transaction-history", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
-async def transaction_history() -> dict:
-    raise NotImplemented
+async def transaction_history(request: Request) -> dict:
+    transaction_history_received = await handler.transaction_history(request)
+
+    return transaction_history_received
 
 # ...

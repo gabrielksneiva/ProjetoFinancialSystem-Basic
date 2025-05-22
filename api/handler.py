@@ -3,16 +3,18 @@ from api.types import create_user_request_validation, UserUpdate, update_user_re
 from shared.types import UserCreate, LoginRequest, DepositRequest, WithdrawRequest
 from services.deposit import DepositService
 from services.withdraw import WithdrawService
+from services.statement import StatementService
 from services.user import UserService
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Handler:
-    def __init__(self, user_service: UserService, deposit_service: DepositService, withdraw_service: WithdrawService):
+    def __init__(self, user_service: UserService, deposit_service: DepositService, withdraw_service: WithdrawService, statement_service: StatementService):
         self.withdraw_service = withdraw_service
         self.user_service = user_service
         self.deposit_service = deposit_service
+        self.statement_service = statement_service
 
     async def create_user(self, body: UserCreate) -> dict:
         # Validate the request body
@@ -92,4 +94,15 @@ class Handler:
         return withdraw_received
     
     async def balance(self, request: Request) -> dict:
-        return {}
+        email = request.state.user.get("email")
+
+        balance_fetched = await self.statement_service.get_balance(email=email)
+
+        return balance_fetched
+    
+    async def transaction_history(self, request: Request) -> dict:
+        email = request.state.user.get("email")
+
+        transaction_history = await self.statement_service.get_transaction_history(email=email)
+
+        return transaction_history
