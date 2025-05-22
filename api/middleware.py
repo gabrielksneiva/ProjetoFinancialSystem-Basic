@@ -15,7 +15,8 @@ async def is_this_path_protected(request):
             "/api/deposit",
             "/api/withdraw",
             "/api/balance",
-            "/api/transaction-history"
+            "/api/transaction-history",
+            "/api/statement"
         ]
 
         for path in protected_paths:

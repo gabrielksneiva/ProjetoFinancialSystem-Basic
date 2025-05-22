@@ -29,3 +29,15 @@ class StatementService:
             })
         
         return {"transactions": transactions_fetched}
+    
+    async def get_statement(self, email: str, limit: int, page: int) -> dict:
+        balance_fethed = await self.get_balance(email)
+        
+        transaction_history = await self.get_transaction_history(email, limit, page)
+
+        statement = {
+            "balance": balance_fethed["balance"],
+            "transactions": transaction_history["transactions"]
+        }
+
+        return statement

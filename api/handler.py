@@ -106,3 +106,10 @@ class Handler:
         transaction_history = await self.statement_service.get_transaction_history(email, limit, page)
 
         return transaction_history
+    
+    async def statement(self, request: Request, limit: int, page: int) -> dict:
+        email = request.state.user.get("email")
+
+        statement = await self.statement_service.get_statement(email, limit, page)
+
+        return statement
