@@ -114,4 +114,9 @@ async def transaction_history(request: Request, limit: int = 10, page: int = 1) 
 
     return transaction_history_received
 
-# ...
+# Statement
+@router.get("/statement", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
+async def statement(request: Request, limit: int = 10, page: int = 1) -> dict:
+    statement_received = await handler.statement(request, limit, page)
+
+    return statement_received
