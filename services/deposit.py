@@ -6,7 +6,7 @@ class DepositService:
     def __init__(self, db: Database):
         self.db = db
 
-    async def deposit(self, email: str, amount: float):
+    async def create(self, email: str, amount: float):
         create_deposit_on_db = await self.db.create_deposit(email=email, amount=amount)
         if not create_deposit_on_db:
             raise HTTPException(status_code=400, detail="Deposit failed")

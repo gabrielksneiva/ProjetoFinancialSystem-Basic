@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer
 from api.types import UserCreate, UserUpdate
-from shared.types import LoginRequest, DepositRequest
+from shared.types import LoginRequest, DepositRequest, WithdrawRequest
 from repositories.database import Database
 from services.deposit import DepositService
+from services.withdraw import WithdrawService
 from services.user import UserService
 from services.auth import AuthService
 from api.handler import Handler
@@ -34,9 +35,9 @@ async def startup_events():
     )
     user_service = UserService(database_instance, auth_service)
     deposit_service = DepositService(database_instance)
-    #withdraw_service = WithdrawService(database_instance)
+    withdraw_service = WithdrawService(database_instance)
     
-    handler = Handler(user_service, deposit_service)
+    handler = Handler(user_service, deposit_service, withdraw_service)
     
     await test_connection_db(
         os.getenv("DB_ADMIN", ""),
@@ -91,17 +92,19 @@ async def deposit(request: Request, body: DepositRequest) -> dict:
     return deposit_received
 
 # Withdraw
-@router.post("/withdraw", tags=["transactions"])
-async def withdraw() -> dict:
-    raise NotImplemented
+@router.post("/withdraw", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
+async def withdraw(request: Request, body: WithdrawRequest) -> dict:
+    withdraw_received = await handler.withdraw(request, body)
+
+    return withdraw_received
 
 # Balance
-@router.get("/Balance", tags=["transactions"])
+@router.get("/Balance", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
 async def balance() -> dict:
     raise NotImplemented
 
 # Transaction-history
-@router.get("/transaction-history", tags=["transactions"])
+@router.get("/transaction-history", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
 async def transaction_history() -> dict:
     raise NotImplemented
 

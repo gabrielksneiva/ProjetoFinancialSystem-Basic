@@ -12,6 +12,9 @@ class LoginRequest(BaseModel):
 class DepositRequest(BaseModel):
     amount: float
 
+class WithdrawRequest(BaseModel):
+    amount: float
+
 
 class User(BaseModel):
     email: str

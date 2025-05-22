@@ -1,15 +1,16 @@
 from fastapi import HTTPException, Request
 from api.types import create_user_request_validation, UserUpdate, update_user_request_validation, login_request_validation
-from shared.types import UserCreate, LoginRequest, DepositRequest
+from shared.types import UserCreate, LoginRequest, DepositRequest, WithdrawRequest
 from services.deposit import DepositService
+from services.withdraw import WithdrawService
 from services.user import UserService
-from repositories.connection import connect_to_postgres
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Handler:
-    def __init__(self, user_service: UserService, deposit_service: DepositService):
+    def __init__(self, user_service: UserService, deposit_service: DepositService, withdraw_service: WithdrawService):
+        self.withdraw_service = withdraw_service
         self.user_service = user_service
         self.deposit_service = deposit_service
 
@@ -73,6 +74,19 @@ class Handler:
         if body.amount <= 0:
             raise HTTPException(status_code=400, detail="Amount must be greater than zero") 
         
-        deposit_received = await self.deposit_service.deposit(email, body.amount)
+        deposit_received = await self.deposit_service.create(email, body.amount)
 
         return deposit_received
+    
+    async def withdraw(self, request: Request, body: WithdrawRequest) -> dict:
+        email = request.state.user.get("email")
+
+        if not isinstance(body.amount, float):
+            raise HTTPException(status_code=400, detail="Amount must be a float")
+
+        if body.amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be greater than zero") 
+
+        withdraw_received = await self.withdraw_service.create(email, body.amount)
+
+        return withdraw_received

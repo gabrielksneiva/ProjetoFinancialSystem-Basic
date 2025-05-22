@@ -92,6 +92,27 @@ class Database:
         """
         return await self.connection.fetchrow(query, email, amount)
     
+    async def create_withdraw(self, email: str, amount: float):
+        query = """
+        WITH new_transaction AS (
+            INSERT INTO transactions (email, amount, transaction_type, created_at, updated_at)
+            VALUES ($1, $2, 'withdraw', NOW(), NOW())
+            RETURNING transaction_id
+        ),
+        UPDATE balance
+        SET balance = balance - $2,
+            updated_at = NOW()
+        WHERE email = $1 AND balance >= $2
+        RETURNING balance
+        )
+        SELECT transaction_id FROM new_transaction
+        """
+        return await self.connection.fetchrow(query, email, amount)
+    
+    async def get_balance(self, email: str):
+        query = "SELECT balance FROM balance WHERE email = $1"
+        return await self.connection.fetchrow(query, email)
+    
     async def close(self):
         await self.connection.close()
 
