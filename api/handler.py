@@ -90,3 +90,6 @@ class Handler:
         withdraw_received = await self.withdraw_service.create(email, body.amount)
 
         return withdraw_received
+    
+    async def balance(self, request: Request) -> dict:
+        return {}

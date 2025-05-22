@@ -99,9 +99,9 @@ async def withdraw(request: Request, body: WithdrawRequest) -> dict:
     return withdraw_received
 
 # Balance
-@router.get("/Balance", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
-async def balance() -> dict:
-    raise NotImplemented
+@router.get("/balance", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
+async def balance(request: Request) -> dict:
+    return {}
 
 # Transaction-history
 @router.get("/transaction-history", tags=["transactions"], dependencies=[Depends(HTTPBearer())])

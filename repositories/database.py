@@ -94,16 +94,18 @@ class Database:
     
     async def create_withdraw(self, email: str, amount: float):
         query = """
-        WITH new_transaction AS (
-            INSERT INTO transactions (email, amount, transaction_type, created_at, updated_at)
-            VALUES ($1, $2, 'withdraw', NOW(), NOW())
-            RETURNING transaction_id
+        WITH updated_balance AS (
+            UPDATE balance
+            SET balance = balance - $2,
+                updated_at = NOW()
+            WHERE email = $1 AND balance >= $2
+            RETURNING balance
         ),
-        UPDATE balance
-        SET balance = balance - $2,
-            updated_at = NOW()
-        WHERE email = $1 AND balance >= $2
-        RETURNING balance
+        new_transaction AS (
+            INSERT INTO transactions (email, amount, transaction_type, created_at, updated_at)
+            SELECT $1, $2, 'withdraw', NOW(), NOW()
+            FROM updated_balance
+            RETURNING transaction_id
         )
         SELECT transaction_id FROM new_transaction
         """
