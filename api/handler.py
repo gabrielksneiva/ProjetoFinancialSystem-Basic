@@ -100,9 +100,9 @@ class Handler:
 
         return balance_fetched
     
-    async def transaction_history(self, request: Request) -> dict:
+    async def transaction_history(self, request: Request, limit: int, page: int) -> dict:
         email = request.state.user.get("email")
 
-        transaction_history = await self.statement_service.get_transaction_history(email=email)
+        transaction_history = await self.statement_service.get_transaction_history(email, limit, page)
 
         return transaction_history

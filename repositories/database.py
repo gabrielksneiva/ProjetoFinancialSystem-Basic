@@ -115,6 +115,17 @@ class Database:
         query = "SELECT balance FROM balance WHERE email = $1"
         return await self.connection.fetchrow(query, email)
     
+    async def get_transaction_history(self, email: str, limit: int = 10, page: int = 1):
+        offset = (page - 1) * limit
+        query = """
+        SELECT transaction_id, amount, transaction_type, created_at, updated_at
+        FROM transactions
+        WHERE email = $1
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+        """
+        return await self.connection.fetch(query, email, limit, offset)
+    
     async def close(self):
         await self.connection.close()
 

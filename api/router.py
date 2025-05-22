@@ -109,8 +109,8 @@ async def balance(request: Request) -> dict:
 
 # Transaction-history
 @router.get("/transaction-history", tags=["transactions"], dependencies=[Depends(HTTPBearer())])
-async def transaction_history(request: Request) -> dict:
-    transaction_history_received = await handler.transaction_history(request)
+async def transaction_history(request: Request, limit: int = 10, page: int = 1) -> dict:
+    transaction_history_received = await handler.transaction_history(request, limit, page)
 
     return transaction_history_received
 
